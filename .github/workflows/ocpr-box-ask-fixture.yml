@@ -1,0 +1,63 @@
+name: Contributor box-ask-fixture validation
+on:
+  push:
+    branches: [leon/proof-box-ask-fixture-20261110]
+permissions:
+  contents: read
+jobs:
+  exact-source-full:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    defaults:
+      run:
+        working-directory: source
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: proof
+          sparse-checkout: ocpr-exact-proof
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b9b00181ca1aa3b9506e99f787f1d9593c13727b
+          path: source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: source/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Verify exact public PR source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = b9b00181ca1aa3b9506e99f787f1d9593c13727b
+          test -z "$(git status --porcelain)"
+          node --version
+          pnpm --version
+          google-chrome --version
+      - name: Install bubblewrap
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap ripgrep
+      - name: Run native question test before and after
+        env:
+          OCPR_EVIDENCE_DIR: ${{ runner.temp }}/box-ask-fixture
+          NO_COLOR: "1"
+        run: bash ../proof/ocpr-exact-proof/verify.sh
+      - name: Preserve native test logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: box-ask-fixture-${{ github.run_id }}
+          path: ${{ runner.temp }}/box-ask-fixture
+          retention-days: 3
+          if-no-files-found: error
