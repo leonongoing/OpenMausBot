@@ -35,22 +35,24 @@ try {
   const deliveredFile=join(workspace,name);writeFileSync(deliveredFile,source);
   const planPath=join(ui.info.fixture.dataDir,'room-plan.json');
   const plan=JSON.parse(readFileSync(planPath,'utf8'));
-  plan[ui.info.botId].script.push({key:'attach-html',match:['Please attach the synthetic HTML report.'],steps:[{tool:'attach_file',arguments:{path:deliveredFile}}],reply:'The synthetic HTML report is attached.'});
+  plan[ui.info.botId].script.push({key:'share-html',match:['Please share the synthetic HTML report.'],reply:`Here is the generated report: [${name}](${deliveredFile}).`});
   writeFileSync(planPath,JSON.stringify(plan));
   await click(`document.querySelector('textarea')`);
-  await ui.page.send('Input.insertText',{text:'Please attach the synthetic HTML report.'});
+  await ui.page.send('Input.insertText',{text:'Please share the synthetic HTML report.'});
   await waitFor(`document.querySelector('button[aria-label="Send message"]:not(:disabled)')`,'Composer send not ready');
   await click(`document.querySelector('button[aria-label="Send message"]')`);
   const settled=await ui.control(['wait','--bot',ui.info.botId,'--timeout','30']);
   if(settled.status!=='settled')throw Error('Attachment turn did not settle: '+JSON.stringify(settled));
-  const fileButton=`[...document.querySelectorAll('[data-mid] button[aria-label="Preview page: ${name}"]')].find(b=>b.innerText.includes(${JSON.stringify(name)}))`;
+  const fileButton=`[...document.querySelectorAll('[data-mid] button[aria-label="Preview page: ${name}"], [data-mid] button[title="Preview page: ${name}"]')].find(b=>b.innerText.includes(${JSON.stringify(name)}))`;
   await waitFor(fileButton,'Sent attachment preview not present');
   await click(fileButton);
   const frameSelector=`iframe[title="Preview of ${name}"]`;
   await waitFor(`document.querySelector(${JSON.stringify(frameSelector)})`,'HTML preview frame missing');
-  const tree=await ui.page.send('Page.getFrameTree');
-  const frames=[];const visit=node=>{frames.push(node.frame);for(const child of node.childFrames??[])visit(child);};visit(tree.frameTree);
-  const child=frames.find(frame=>frame.url==='about:srcdoc');if(!child)throw Error('Preview child frame missing');
+  const child=await hostWait(async()=>{
+    const tree=await ui.page.send('Page.getFrameTree');const frames=[];
+    const visit=node=>{frames.push(node.frame);for(const nested of node.childFrames??[])visit(nested);};visit(tree.frameTree);
+    return frames.find(frame=>frame.url==='about:srcdoc');
+  },'Preview child frame missing');
   const {executionContextId}=await ui.page.send('Page.createIsolatedWorld',{frameId:child.id,worldName:'html-preview-proof'});
   const frameRead=async()=>{
     const answer=await ui.page.send('Runtime.evaluate',{contextId:executionContextId,returnByValue:true,expression:`({ready:document.readyState,text:document.body?.innerText,scriptRan:document.body?.dataset.scriptRan??null,externalRan:document.body?.dataset.externalRan??null,chart:document.querySelector('#chart')?.textContent,csp:document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.content})`});
@@ -79,12 +81,13 @@ try {
   const completed=await hostWait(()=>downloads.find(d=>d.state==='completed'),'Original file download did not complete');
   const downloaded=completed.filePath??join(downloadDir,completed.guid);
   if(!existsSync(downloaded)||!readFileSync(downloaded).equals(Buffer.from(source)))throw Error('Downloaded original bytes changed');
-  const result={at:new Date().toISOString(),mode,sourceHead:ui.info.expectedHead,baseline:ui.info.baseline,sourceSha256:sha(source),downloadSha256:sha(readFileSync(downloaded)),downloadedBytes:readFileSync(downloaded).length,originalDownloadVerified:true,frame,content,note,desktop,mobile,forbiddenRequests:requests,downloads,baselineLoaded:ui.baselineLoaded(),runtimeErrors,scope:'Real composer send, fake-engine attach_file delivery, private attachment preview, opaque sandbox readback and native download in isolated fake-engine app. Chrome desktop and mobile layout emulation, not physical phone.'};
+  const result={at:new Date().toISOString(),mode,sourceHead:ui.info.expectedHead,baseline:ui.info.baseline,sourceSha256:sha(source),downloadSha256:sha(readFileSync(downloaded)),downloadedBytes:readFileSync(downloaded).length,originalDownloadVerified:true,frame,content,note,desktop,mobile,forbiddenRequests:requests,downloads,baselineLoaded:ui.baselineLoaded(),runtimeErrors,scope:'Real composer send, scripted bot workspace file link, authorized HTML preview, opaque sandbox readback and native download in isolated fake-engine app. Chrome desktop and mobile layout emulation, not physical phone.'};
   if(runtimeErrors.length)throw Error('App runtime exceptions: '+JSON.stringify(runtimeErrors));
   writeFileSync(join(evidence,`${mode}-result.json`),JSON.stringify(result,null,2)+'\n');
   writeFileSync(join(evidence,`${mode}-server.log`),readFileSync(ui.info.fixture.logPath));
   console.log(JSON.stringify({mode,notice:Boolean(note),sandboxPreserved:true,externalRequests:requests.length,originalDownloadVerified:true,sourceHead:ui.info.expectedHead}));
 } catch(error) {
+  try{if(ui?.info.fixture.logPath)writeFileSync(join(evidence,`${mode}-server.log`),readFileSync(ui.info.fixture.logPath));}catch{}
   let dom;try{dom=await ui?.page.evaluate(`({text:document.body.innerText,html:document.body.outerHTML.slice(0,160000)})`);const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64'));}catch(e){dom={error:String(e)};}
   writeFileSync(join(evidence,`${mode}-failure.json`),JSON.stringify({at:new Date().toISOString(),error:String(error.stack||error),info:ui?.info,dom,requests,downloads,runtimeErrors},null,2)+'\n');throw error;
 } finally {
