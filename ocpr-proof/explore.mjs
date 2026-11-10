@@ -27,7 +27,7 @@ try {
     await tap(`document.querySelector('[data-mausbot-welcome-later]')`);
     await waitFor(`!document.querySelector('[data-mausbot-welcome-later]')`,'Welcome dialog did not dismiss');
   }
-  const pepperButton=`[...document.querySelectorAll('button')].find(b=>b.innerText.includes('Pepper'))`;
+  const pepperButton=`document.querySelector('[data-sidebar-bot-row="${ui.info.botId}"]')`;
   const visible=await ui.page.evaluate(`(()=>{const b=${pepperButton};const r=b?.getBoundingClientRect();return r&&r.x>=0&&r.x<innerWidth&&r.y>=0&&r.y<innerHeight;})()`);
   if(!visible)await tap(`document.querySelector('button[aria-label="Open bot list"]')`);
   await tap(pepperButton);
@@ -50,6 +50,7 @@ try {
   console.log(JSON.stringify({ mode, applicationLoaded: true, source: ui.info.expectedHead, buttons: dom.buttons.length, rows: dom.rows.length, inputAssertionsRun: false }));
 } catch (error) {
   let dom;
+  try { const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64')); } catch {}
   try { dom = await ui?.page.evaluate('({url:location.href,text:document.body.innerText,html:document.body.outerHTML.slice(0,100000)})'); } catch (e) { dom = { error: String(e) }; }
   writeFileSync(join(evidence, `${mode}-explore-failure.json`), JSON.stringify({ at: new Date().toISOString(), error: String(error.stack || error), info: ui?.info, runtimeErrors, dom }, null, 2) + '\n');
   throw error;
