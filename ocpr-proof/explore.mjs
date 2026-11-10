@@ -110,7 +110,7 @@ try {
   await waitFor(`(${longPressRow}).querySelector('[data-testid="message-actions"][data-shown="true"]')`,'Long press did not expose message actions');
   await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   if(await ui.page.evaluate(`Boolean(document.querySelector('[data-composer-reply]'))`))throw Error('Long press selected a swipe reply');
-  await tap(`(${longPressRow}).querySelector('button[aria-label="Reply"]')`);
+  await tap(`(${longPressRow}).querySelector('button[aria-label="Reply to message"]')`);
   await waitFor(`document.querySelector('[data-composer-reply]')?.innerText.includes('SWIPE_ROOM_USER:')`,'Existing Reply action did not select original message');
   writeFileSync(join(evidence,`${mode}-longpress-reply.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
   writeFileSync(join(evidence,`${mode}-longpress.json`),JSON.stringify({mode,source:ui.info.expectedHead,point:longPressPoint,actionsExposed:true,replyViaExistingAction:true,quote:await ui.page.evaluate(`document.querySelector('[data-composer-reply]').innerText`)},null,2)+'\n');
