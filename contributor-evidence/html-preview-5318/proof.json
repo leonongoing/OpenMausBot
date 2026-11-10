@@ -1,0 +1,85 @@
+{
+  "sourceHead": "961198857d94718c98b1309819cdd0b0dc6b0f7e",
+  "runId": 42891640781,
+  "url": "https://github.com/leonongoing/OpenMausBot/actions/runs/42891640781",
+  "workflow": "Native Composer request; scripted fake provider returns a real workspace file link; original filename opens actual HTML dialog. Strict opaque iframe and CSP stay active. Browser download original bytes verified.",
+  "qualification": "Synthetic isolated app. Desktop1100x850 and mobile390x844Chrome layout emulation, not physical phone; no real provider call, Docker or Caddy deployment claim.",
+  "results": {
+    "before": {
+      "sourceSha256": "4a887cb7dd9083dfee6936d9498c655a08c82a7e759acbbe8536c329208cf37c",
+      "downloadSha256": "4a887cb7dd9083dfee6936d9498c655a08c82a7e759acbbe8536c329208cf37c",
+      "downloadedBytes": 726,
+      "originalDownloadVerified": true,
+      "note": null,
+      "content": {
+        "ready": "complete",
+        "text": "Synthetic release report\n\nThis report contains an interactive chart and external assets.\n\nLoading chart\u2026",
+        "scriptRan": null,
+        "externalRan": null,
+        "chart": "Loading chart\u2026",
+        "csp": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:; media-src data:"
+      },
+      "mobile": {
+        "width": 390,
+        "height": 844,
+        "dialog": {
+          "x": 7.796875,
+          "y": 58.65625,
+          "width": 374.390625,
+          "height": 726.671875,
+          "top": 58.65625,
+          "right": 382.1875,
+          "bottom": 785.328125,
+          "left": 7.796875
+        }
+      },
+      "opaqueIframeSeparateTarget": true
+    },
+    "after": {
+      "sourceSha256": "33473f7eea7fcbe2335e2baf3e6b86da3ccac2c4b0366e6d010003ad6a020f16",
+      "downloadSha256": "33473f7eea7fcbe2335e2baf3e6b86da3ccac2c4b0366e6d010003ad6a020f16",
+      "downloadedBytes": 726,
+      "originalDownloadVerified": true,
+      "note": "Scripts and external resources are disabled in this preview. Download the original file to open it in your browser.",
+      "content": {
+        "ready": "complete",
+        "text": "Synthetic release report\n\nThis report contains an interactive chart and external assets.\n\nLoading chart\u2026",
+        "scriptRan": null,
+        "externalRan": null,
+        "chart": "Loading chart\u2026",
+        "csp": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:; media-src data:"
+      },
+      "mobile": {
+        "width": 390,
+        "height": 844,
+        "note": {
+          "x": 20.796875,
+          "y": 134.65625,
+          "width": 348.390625,
+          "height": 52,
+          "top": 134.65625,
+          "right": 369.1875,
+          "bottom": 186.65625,
+          "left": 20.796875
+        },
+        "dialog": {
+          "x": 7.796875,
+          "y": 28.65625,
+          "width": 374.390625,
+          "height": 786.671875,
+          "top": 28.65625,
+          "right": 382.1875,
+          "bottom": 815.328125,
+          "left": 7.796875
+        }
+      },
+      "opaqueIframeSeparateTarget": true
+    }
+  },
+  "sha256": {
+    "before-desktop.png": "c0aeb69cfd6506e79ee647a9322c8c772dae77ec3da93340f689a4f3c609bd4b",
+    "after-desktop.png": "7740cfb6771cf534c5dd758374e0ee88c2299eef75513481d57898844256555a",
+    "before-mobile.png": "73efcf2e3b8163584933695fdb5e666ca4092ca0b47f40ceaf5361b2f51bd47c",
+    "after-mobile.png": "a333301a02b0b30838b154b4d25fe315279ca2d390b1b69f03f94d2274c2d7da"
+  }
+}
