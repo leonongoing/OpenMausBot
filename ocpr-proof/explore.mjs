@@ -12,14 +12,21 @@ try {
   ui = await launchSwipeUi(mode);
   ui.page.on('Runtime.exceptionThrown', event => runtimeErrors.push(event));
   await ui.page.send('Runtime.enable');
-  await ui.page.evaluate(`new Promise((resolve,reject)=>{
+  const waitFor = async (expression, label) => ui.page.evaluate(`new Promise((resolve,reject)=>{
     const deadline=Date.now()+90000;
-    const check=()=>{
-      if(document.body.innerText.trim().length>40&&document.querySelectorAll('button').length>3)return resolve(true);
-      if(Date.now()>deadline)return reject(Error('Application did not render'));
-      requestAnimationFrame(check);
-    };check();
-  })`, 95000);
+    const check=()=>{if(${expression})return resolve(true);
+      if(Date.now()>deadline)return reject(Error(${JSON.stringify(label)}));
+      setTimeout(check,100);};check();})`,95000);
+  const tap = async expression => {
+    const point=await ui.page.evaluate(`(()=>{const el=${expression};if(!el)throw Error('Tap target missing');const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
+    await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,id:1}]});
+    await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  };
+  await waitFor(`document.querySelector('[data-message-row]') || [...document.querySelectorAll('button')].some(b=>b.innerText.includes('Pepper'))`, 'Hydrated bot list missing');
+  if(!await ui.page.evaluate(`Boolean(document.querySelector('[data-message-row]'))`)) {
+    await tap(`[...document.querySelectorAll('button')].find(b=>b.innerText.includes('Pepper'))`);
+  }
+  await waitFor(`document.querySelector('textarea') && [...document.querySelectorAll('[data-message-row]')].some(r=>r.innerText.includes('SWIPE_USER_RELEASE_')) && [...document.querySelectorAll('[data-message-row]')].some(r=>r.innerText.includes('SWIPE_BOT_RELEASE'))`, 'Hydrated seeded conversation missing');
   ui.assertActive();
   const dom = await ui.page.evaluate(`({
     title:document.title,url:location.href,text:document.body.innerText.slice(0,14000),html:document.body.outerHTML.slice(0,200000),
