@@ -13,8 +13,6 @@ jobs:
         working-directory: source
     env:
       NODE_OPTIONS: --max-old-space-size=4096
-      OCPR_SOURCE_DIR: ${{ github.workspace }}/source
-      OCPR_EVIDENCE_DIR: ${{ runner.temp }}/swipe-ui
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -48,10 +46,14 @@ jobs:
       - name: Observe original upstream message components
         env:
           NODE_OPTIONS: --max-old-space-size=512
+          OCPR_SOURCE_DIR: ${{ github.workspace }}/source
+          OCPR_EVIDENCE_DIR: ${{ runner.temp }}/swipe-ui
         run: node --experimental-strip-types ../proof/ocpr-proof/explore.mjs before
       - name: Observe changed message components
         env:
           NODE_OPTIONS: --max-old-space-size=512
+          OCPR_SOURCE_DIR: ${{ github.workspace }}/source
+          OCPR_EVIDENCE_DIR: ${{ runner.temp }}/swipe-ui
         run: node --experimental-strip-types ../proof/ocpr-proof/explore.mjs after
       - name: Verify source remained unchanged
         if: always()
