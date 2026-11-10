@@ -17,8 +17,8 @@ try {
     const check=()=>{if(${expression})return resolve(true);
       if(Date.now()>deadline)return reject(Error(${JSON.stringify(label)}));
       setTimeout(check,100);};check();})`,95000);
-  const tap = async expression => {
-    await waitFor(`(()=>{const el=${expression};if(!el)return false;const r=el.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));})()`,'Tap target is not visible or is covered');
+  const tap = async (expression, scroll = false) => {
+    await waitFor(`(()=>{const el=${expression};if(!el)return false;if(${scroll})el.scrollIntoView({block:'center',behavior:'instant'});const r=el.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));})()`,'Tap target is not visible or is covered');
     const point=await ui.page.evaluate(`(()=>{const el=${expression};if(!el)throw Error('Tap target missing');const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,id:1}]});
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
@@ -125,14 +125,15 @@ try {
   writeFileSync(join(evidence,`${mode}-longpress-target.json`),JSON.stringify({point:longPressPoint,expectedId:originalRoomMessage},null,2)+'\n');
   await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:longPressPoint.x,y:longPressPoint.y,id:1}]});
   await waitFor(`(${longPressRow}).querySelector('[data-testid="message-actions"][data-shown="true"]')`,'Long press did not expose message actions');
+  writeFileSync(join(evidence,`${mode}-longpress-exposed.json`),JSON.stringify({sourceId:originalRoomMessage,actionsExposed:true,nativeTrace:await ui.page.evaluate('window.__swipeEvents')},null,2)+'\n');
   await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   if(await ui.page.evaluate(`Boolean(document.querySelector('[data-composer-reply]'))`))throw Error('Long press selected a swipe reply');
-  await tap(`(${longPressRow}).querySelector('button[aria-label="Reply to message"]')`);
+  await tap(`(${longPressRow}).querySelector('button[aria-label="Reply to message"]')`,true);
   await waitFor(`document.querySelector('[data-composer-reply]')?.innerText.includes('SWIPE_ROOM_USER:')`,'Existing Reply action did not select original message');
   writeFileSync(join(evidence,`${mode}-longpress-reply.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
   writeFileSync(join(evidence,`${mode}-longpress.json`),JSON.stringify({mode,source:ui.info.expectedHead,point:longPressPoint,actionsExposed:true,replyViaExistingAction:true,quote:await ui.page.evaluate(`document.querySelector('[data-composer-reply]').innerText`)},null,2)+'\n');
   await tap(`document.querySelector('[data-composer-reply] button')`);
-  writeFileSync(join(evidence,`${mode}-native-touch.json`),JSON.stringify({source:ui.info.expectedHead,mode,cases,qualification:'Chrome mobile emulation; not physical Android. Chat and room user/bot swipe, quote preview and saved source ID readback; scrolling, selection and long press browser checks still pending.'},null,2)+'\n');
+  writeFileSync(join(evidence,`${mode}-native-touch.json`),JSON.stringify({source:ui.info.expectedHead,mode,cases,qualification:'Chrome mobile emulation; not physical Android. Chat and room user/bot swipe, quote preview and saved source ID readback; Existing long-press Reply action also verified; browser scrolling and selection checks still pending.'},null,2)+'\n');
   await ui.page.evaluate('new Promise(resolve=>setTimeout(resolve,250))');
   await ui.page.send('Page.stopScreencast');
   if(frames.length<3||screencastErrors.length)throw Error('Screencast failed: '+JSON.stringify({frames:frames.length,screencastErrors}));
