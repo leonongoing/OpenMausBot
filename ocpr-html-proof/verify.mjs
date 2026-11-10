@@ -48,14 +48,21 @@ try {
   await click(fileButton);
   const frameSelector=`iframe[title="Preview of ${name}"]`;
   await waitFor(`document.querySelector(${JSON.stringify(frameSelector)})`,'HTML preview frame missing');
-  const child=await hostWait(async()=>{
-    const tree=await ui.page.send('Page.getFrameTree');const frames=[];
-    const visit=node=>{frames.push(node.frame);for(const nested of node.childFrames??[])visit(nested);};visit(tree.frameTree);
-    return frames.find(frame=>frame.url==='about:srcdoc');
-  },'Preview child frame missing');
-  const {executionContextId}=await ui.page.send('Page.createIsolatedWorld',{frameId:child.id,worldName:'html-preview-proof'});
+  const {root:domRoot}=await ui.page.send('DOM.getDocument');
+  const {nodeId:iframeNode}=await ui.page.send('DOM.querySelector',{nodeId:domRoot.nodeId,selector:frameSelector});
+  const owner=await ui.page.send('DOM.describeNode',{nodeId:iframeNode,depth:0});
+  const transport=await hostWait(async()=>{
+    const {targetInfos}=await ui.browserSend('Target.getTargets');
+    const target=targetInfos.find(t=>t.type==='iframe'&&(t.targetId===owner.node.frameId||t.url==='about:srcdoc'));
+    if(target){const {sessionId}=await ui.browserSend('Target.attachToTarget',{targetId:target.targetId,flatten:true});return {sessionId,targetId:target.targetId,frameId:owner.node.frameId??target.targetId,oopif:true};}
+    const tree=await ui.page.send('Page.getFrameTree');const frames=[];const visit=n=>{frames.push(n.frame);for(const c of n.childFrames??[])visit(c);};visit(tree.frameTree);
+    const child=frames.find(f=>f.id===owner.node.frameId||f.url==='about:srcdoc');return child?{frameId:child.id,oopif:false}:null;
+  },'Preview child target missing');
+  const childSend=(method,params)=>transport.sessionId?ui.browserSendSession(transport.sessionId,method,params):ui.page.send(method,params);
+  await childSend('Page.enable');
+  const {executionContextId}=await childSend('Page.createIsolatedWorld',{frameId:transport.frameId,worldName:'html-preview-proof'});
   const frameRead=async()=>{
-    const answer=await ui.page.send('Runtime.evaluate',{contextId:executionContextId,returnByValue:true,expression:`({ready:document.readyState,text:document.body?.innerText,scriptRan:document.body?.dataset.scriptRan??null,externalRan:document.body?.dataset.externalRan??null,chart:document.querySelector('#chart')?.textContent,csp:document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.content})`});
+    const answer=await childSend('Runtime.evaluate',{contextId:executionContextId,returnByValue:true,expression:`({ready:document.readyState,text:document.body?.innerText,scriptRan:document.body?.dataset.scriptRan??null,externalRan:document.body?.dataset.externalRan??null,chart:document.querySelector('#chart')?.textContent,csp:document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.content})`});
     if(answer.exceptionDetails)throw Error(JSON.stringify(answer.exceptionDetails));return answer.result.value;
   };
   const content=await hostWait(async()=>{const value=await frameRead();return value.ready==='complete'?value:null;},'Preview document did not load');
@@ -81,14 +88,14 @@ try {
   const completed=await hostWait(()=>downloads.find(d=>d.state==='completed'),'Original file download did not complete');
   const downloaded=completed.filePath??join(downloadDir,completed.guid);
   if(!existsSync(downloaded)||!readFileSync(downloaded).equals(Buffer.from(source)))throw Error('Downloaded original bytes changed');
-  const result={at:new Date().toISOString(),mode,sourceHead:ui.info.expectedHead,baseline:ui.info.baseline,sourceSha256:sha(source),downloadSha256:sha(readFileSync(downloaded)),downloadedBytes:readFileSync(downloaded).length,originalDownloadVerified:true,frame,content,note,desktop,mobile,forbiddenRequests:requests,downloads,baselineLoaded:ui.baselineLoaded(),runtimeErrors,scope:'Real composer send, scripted bot workspace file link, authorized HTML preview, opaque sandbox readback and native download in isolated fake-engine app. Chrome desktop and mobile layout emulation, not physical phone.'};
+  const result={at:new Date().toISOString(),mode,sourceHead:ui.info.expectedHead,baseline:ui.info.baseline,frameTransport:transport,sourceSha256:sha(source),downloadSha256:sha(readFileSync(downloaded)),downloadedBytes:readFileSync(downloaded).length,originalDownloadVerified:true,frame,content,note,desktop,mobile,forbiddenRequests:requests,downloads,baselineLoaded:ui.baselineLoaded(),runtimeErrors,scope:'Real composer send, scripted bot workspace file link, authorized HTML preview, opaque sandbox readback and native download in isolated fake-engine app. Chrome desktop and mobile layout emulation, not physical phone.'};
   if(runtimeErrors.length)throw Error('App runtime exceptions: '+JSON.stringify(runtimeErrors));
   writeFileSync(join(evidence,`${mode}-result.json`),JSON.stringify(result,null,2)+'\n');
   writeFileSync(join(evidence,`${mode}-server.log`),readFileSync(ui.info.fixture.logPath));
   console.log(JSON.stringify({mode,notice:Boolean(note),sandboxPreserved:true,externalRequests:requests.length,originalDownloadVerified:true,sourceHead:ui.info.expectedHead}));
 } catch(error) {
   try{if(ui?.info.fixture.logPath)writeFileSync(join(evidence,`${mode}-server.log`),readFileSync(ui.info.fixture.logPath));}catch{}
-  let dom;try{dom=await ui?.page.evaluate(`({text:document.body.innerText,html:document.body.outerHTML.slice(0,160000)})`);const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64'));}catch(e){dom={error:String(e)};}
+  let dom;try{writeFileSync(join(evidence,`${mode}-targets.json`),JSON.stringify(await ui?.browserSend('Target.getTargets'),null,2)+'\n');dom=await ui?.page.evaluate(`({text:document.body.innerText,html:document.body.outerHTML.slice(0,160000)})`);const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64'));}catch(e){dom={error:String(e)};}
   writeFileSync(join(evidence,`${mode}-failure.json`),JSON.stringify({at:new Date().toISOString(),error:String(error.stack||error),info:ui?.info,dom,requests,downloads,runtimeErrors},null,2)+'\n');throw error;
 } finally {
   await ui?.close();sink.closeAllConnections();await new Promise(resolve=>sink.close(resolve));

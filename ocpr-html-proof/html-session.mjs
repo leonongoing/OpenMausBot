@@ -108,6 +108,6 @@ export async function launchHtmlUi(mode) {
     progress('page-navigated');
     const info = { at: new Date().toISOString(), attempt, mode, expectedHead, baseline, sourceFiles: [...snapshots.values()].map(({ text, ...info }) => info), fixture: fixture.info, previewUrl, botId: pepper.id, limits: { viteNodeHeapMiB: 512, chromeJsHeapMiB: 256 }, proofState: 'Launched only; actual input assertions pending' };
     writeFileSync(join(evidence, `5318-${attempt}-ui-launch.json`), JSON.stringify(info, null, 2) + '\n');
-    return { info, page, api, control, browserSend:(method,params)=>browser.send(method,params), browserOn:(method,listener)=>browser.on(method,listener), close, assertActive, resources: () => ({ preflight, samples, abortReason }), baselineLoaded: () => [...loadedBaseline] };
+    return { info, page, api, control, browserSend:(method,params)=>browser.send(method,params), browserSendSession:(session,method,params)=>browser.sendSession(session,method,params), browserOn:(method,listener)=>browser.on(method,listener), close, assertActive, resources: () => ({ preflight, samples, abortReason }), baselineLoaded: () => [...loadedBaseline] };
   } catch (error) { failure = String(error); await close(); throw error; }
 }

@@ -33,6 +33,7 @@ export interface ChromePage {
 }
 
 export interface PipeChrome {
+  sendSession(sessionId: string, method: string, params?: Record<string, unknown>): Promise<any>;
   send(method: string, params?: Record<string, unknown>): Promise<any>;
   on(method: string, listener: (params: any) => void): () => void;
   owner: { pid: number | undefined; profile: string };
@@ -110,6 +111,7 @@ export async function launchPipeChrome(binary: string, args: string[]): Promise<
   });
   await send("Browser.getVersion");
   return {
+    sendSession: (sessionId, method, params = {}) => send(method, params, sessionId),
     send: (method, params = {}) => send(method, params),
     on(method, listener) {
       const handler = (message: { method?: string; params?: any; sessionId?: string }) => { if (!message.sessionId && message.method === method) listener(message.params); };
