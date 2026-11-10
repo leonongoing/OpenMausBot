@@ -31,13 +31,12 @@ try {
   await waitFor(`document.querySelector('[data-mausbot-welcome-later]')`,'Fixture welcome missing');
   await click(`document.querySelector('[data-mausbot-welcome-later]')`);
   await waitFor(`!document.querySelector('[data-mausbot-welcome-later]')&&document.querySelector('textarea')&&document.querySelector('[data-composer-row] input[type=file]')`,'Composer not hydrated');
-  const {root}=await ui.page.send('DOM.getDocument');
-  const {nodeId}=await ui.page.send('DOM.querySelector',{nodeId:root.nodeId,selector:'[data-composer-row] input[type=file]'});
-  if(!nodeId)throw Error('Composer file input missing');
-  await ui.page.send('DOM.setFileInputFiles',{nodeId,files:[input]});
+  const workspace=join(ui.info.fixture.dataDir,'workspaces',ui.info.botId);mkdirSync(workspace,{recursive:true});
+  const deliveredFile=join(workspace,name);writeFileSync(deliveredFile,source);
+  writeFileSync(join(evidence,`${mode}-tool-calls.json`),JSON.stringify([{name:'attach_file',server:'agents',input:{path:deliveredFile}}]));
   await click(`document.querySelector('textarea')`);
-  await ui.page.send('Input.insertText',{text:'Please review this synthetic HTML report.'});
-  await waitFor(`document.querySelector('button[aria-label="Send message"]:not(:disabled)')`,'Upload/send not ready');
+  await ui.page.send('Input.insertText',{text:'Please attach the synthetic HTML report.'});
+  await waitFor(`document.querySelector('button[aria-label="Send message"]:not(:disabled)')`,'Composer send not ready');
   await click(`document.querySelector('button[aria-label="Send message"]')`);
   const settled=await ui.control(['wait','--bot',ui.info.botId,'--timeout','30']);
   if(settled.status!=='settled')throw Error('Attachment turn did not settle: '+JSON.stringify(settled));
@@ -77,7 +76,7 @@ try {
   const completed=await hostWait(()=>downloads.find(d=>d.state==='completed'),'Original file download did not complete');
   const downloaded=completed.filePath??join(downloadDir,completed.guid);
   if(!existsSync(downloaded)||!readFileSync(downloaded).equals(Buffer.from(source)))throw Error('Downloaded original bytes changed');
-  const result={at:new Date().toISOString(),mode,sourceHead:ui.info.expectedHead,baseline:ui.info.baseline,sourceSha256:sha(source),downloadSha256:sha(readFileSync(downloaded)),downloadedBytes:readFileSync(downloaded).length,originalDownloadVerified:true,frame,content,note,desktop,mobile,forbiddenRequests:requests,downloads,baselineLoaded:ui.baselineLoaded(),runtimeErrors,scope:'Real composer file input, private upload, sent attachment preview, opaque sandbox readback and native download in isolated fake-engine app. Chrome desktop and mobile layout emulation, not physical phone.'};
+  const result={at:new Date().toISOString(),mode,sourceHead:ui.info.expectedHead,baseline:ui.info.baseline,sourceSha256:sha(source),downloadSha256:sha(readFileSync(downloaded)),downloadedBytes:readFileSync(downloaded).length,originalDownloadVerified:true,frame,content,note,desktop,mobile,forbiddenRequests:requests,downloads,baselineLoaded:ui.baselineLoaded(),runtimeErrors,scope:'Real composer send, fake-engine attach_file delivery, private attachment preview, opaque sandbox readback and native download in isolated fake-engine app. Chrome desktop and mobile layout emulation, not physical phone.'};
   if(runtimeErrors.length)throw Error('App runtime exceptions: '+JSON.stringify(runtimeErrors));
   writeFileSync(join(evidence,`${mode}-result.json`),JSON.stringify(result,null,2)+'\n');
   writeFileSync(join(evidence,`${mode}-server.log`),readFileSync(ui.info.fixture.logPath));

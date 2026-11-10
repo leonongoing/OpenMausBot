@@ -61,7 +61,7 @@ export async function launchHtmlUi(mode) {
       catch (error) { abortReason = String(error); void close(); }
     }, 5000);
     timer.unref();
-    fixture = await launchVerificationServer({ ...process.env, FAKE_CLAUDE_REPLIES: JSON.stringify(Array(20).fill('This is a synthetic attachment preview verification.')) });
+    fixture = await launchVerificationServer({ ...process.env, FAKE_CLAUDE_TOOL_CALLS_FILE: join(evidence,`${mode}-tool-calls.json`), FAKE_CLAUDE_REPLIES: JSON.stringify(Array(20).fill('This is a synthetic attachment preview verification.')) });
     ownedPids.push(fixture.info.pid);progress('isolated-server-started');assertActive();
     const api=fixtureApi(fixture.info.url);
     const control=async args=>{assertActive();const result=await runControlOmb([...args,'--url',fixture.info.url]);assertActive();return result;};
