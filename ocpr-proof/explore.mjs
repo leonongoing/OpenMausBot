@@ -85,7 +85,8 @@ try {
     const result={surface:surface.kind,marker,point,moving,released};
     if(mode==='after') {
       const text=`NATIVE_QUOTE_READBACK_${surface.kind}_${marker}`;
-      if(!await ui.page.evaluate(`document.activeElement===document.querySelector('textarea')`))throw Error('Selecting reply did not focus composer');
+      await tap(`document.querySelector('textarea')`);
+      await waitFor(`document.activeElement===document.querySelector('textarea')`,'Composer did not focus after native tap');
       await ui.page.send('Input.insertText',{text});
       await waitFor(`document.querySelector('button[aria-label="Send message"]:not(:disabled)')`,'Send button not ready');
       await tap(`document.querySelector('button[aria-label="Send message"]')`);
