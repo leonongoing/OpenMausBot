@@ -110,12 +110,10 @@ try {
   await waitFor(`(${longPressRow}).querySelector('[data-testid="message-actions"][data-shown="true"]')`,'Long press did not expose message actions');
   await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   if(await ui.page.evaluate(`Boolean(document.querySelector('[data-composer-reply]'))`))throw Error('Long press selected a swipe reply');
-  await tap(`(${longPressRow}).querySelector('button[aria-label="Message actions"]')`);
-  await waitFor(`[...document.querySelectorAll('[role=menuitem]')].some(b=>b.innerText.trim()==='Reply')`,'Long press menu has no Reply');
-  await tap(`[...document.querySelectorAll('[role=menuitem]')].find(b=>b.innerText.trim()==='Reply')`);
-  await waitFor(`document.querySelector('[data-composer-reply]')?.innerText.includes('SWIPE_ROOM_USER:')`,'Existing menu Reply did not select original message');
+  await tap(`(${longPressRow}).querySelector('button[aria-label="Reply"]')`);
+  await waitFor(`document.querySelector('[data-composer-reply]')?.innerText.includes('SWIPE_ROOM_USER:')`,'Existing Reply action did not select original message');
   writeFileSync(join(evidence,`${mode}-longpress-reply.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
-  writeFileSync(join(evidence,`${mode}-longpress.json`),JSON.stringify({mode,source:ui.info.expectedHead,point:longPressPoint,actionsExposed:true,replyViaExistingMenu:true,quote:await ui.page.evaluate(`document.querySelector('[data-composer-reply]').innerText`)},null,2)+'\n');
+  writeFileSync(join(evidence,`${mode}-longpress.json`),JSON.stringify({mode,source:ui.info.expectedHead,point:longPressPoint,actionsExposed:true,replyViaExistingAction:true,quote:await ui.page.evaluate(`document.querySelector('[data-composer-reply]').innerText`)},null,2)+'\n');
   await tap(`document.querySelector('[data-composer-reply] button')`);
   writeFileSync(join(evidence,`${mode}-native-touch.json`),JSON.stringify({source:ui.info.expectedHead,mode,cases,qualification:'Chrome mobile emulation; not physical Android. Chat and room user/bot swipe, quote preview and saved source ID readback; scrolling, selection and long press browser checks still pending.'},null,2)+'\n');
   await ui.page.evaluate('new Promise(resolve=>setTimeout(resolve,250))');
