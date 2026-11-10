@@ -1,0 +1,100 @@
+{
+  "head": "03c52603809431308d5d6f434e4ef054b29ca85a",
+  "base": "22733fdfa2e51dd551fb281221a8eaf377809ecf",
+  "results": [
+    {
+      "mode": "before",
+      "layout": "desktop",
+      "errors": {
+        "alerts": [
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers"
+        ],
+        "tiles": 6,
+        "retries": 6,
+        "requests": 1,
+        "width": 840,
+        "scrollWidth": 840
+      },
+      "retried": null
+    },
+    {
+      "mode": "before",
+      "layout": "mobile",
+      "errors": {
+        "alerts": [
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers",
+          "no route: GET /api/mcp/servers"
+        ],
+        "tiles": 6,
+        "retries": 6,
+        "requests": 1,
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "retried": null
+    },
+    {
+      "mode": "after",
+      "layout": "desktop",
+      "errors": {
+        "alerts": [
+          "Couldn't load MCP apps: no route: GET /api/mcp/servers"
+        ],
+        "tiles": 0,
+        "retries": 1,
+        "requests": 1,
+        "width": 840,
+        "scrollWidth": 840
+      },
+      "retried": {
+        "alerts": [],
+        "tiles": 6,
+        "retries": 0,
+        "requests": 2,
+        "width": 840,
+        "scrollWidth": 840
+      }
+    },
+    {
+      "mode": "after",
+      "layout": "mobile",
+      "errors": {
+        "alerts": [
+          "Couldn't load MCP apps: no route: GET /api/mcp/servers"
+        ],
+        "tiles": 0,
+        "retries": 1,
+        "requests": 1,
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "retried": {
+        "alerts": [],
+        "tiles": 6,
+        "retries": 0,
+        "requests": 2,
+        "width": 390,
+        "scrollWidth": 390
+      }
+    }
+  ],
+  "scope": "Actual MCP panel and app styles in Chrome. Only the store/API module was replaced with a disposable fixture, first rejection then empty list.",
+  "runId": 42914382495,
+  "sha256": {
+    "before-desktop.png": "5c3861ea6508aa4bafd79023574394d6d5c7d9dd42e97c36815813b55623b363",
+    "before-mobile.png": "cd65e429dc28f41dc0fbae7b0abfa2f3aa23f6aa6c117aac4a6c35c6869cec6f",
+    "after-desktop.png": "57b1d2e8f6750e7817eada574504a7688c528e294009e39e7df66f03df4969e6",
+    "after-mobile.png": "8dd6559a84c25e07c2e2d1b83910079c35db9cfffceb8af59c423903eb555b91",
+    "retry-desktop.png": "d9a3cadeb8f0aab9ed2dd17bcd29af357a99fd83566161164f83f58913f5b54d",
+    "retry-mobile.png": "e59bed92a55d786b4856b7c40ae5f33007dac90b24b1a6eee7266b9393a437da"
+  }
+}
