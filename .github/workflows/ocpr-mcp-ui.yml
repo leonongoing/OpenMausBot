@@ -1,0 +1,70 @@
+name: Contributor MCP list error recovery
+on:
+  push:
+    branches: [leon/proof-mcp-ui-5350]
+permissions:
+  contents: read
+jobs:
+  isolated-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: source
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: proof
+          sparse-checkout: ocpr-mcp-proof
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 03c52603809431308d5d6f434e4ef054b29ca85a
+          path: source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: source/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Verify exact source and browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 03c52603809431308d5d6f434e4ef054b29ca85a
+          test -z "$(git status --porcelain)"
+          node --version
+          pnpm --version
+          google-chrome --version
+      - name: Capture MCP load failure and retry
+        env:
+          OCPR_SOURCE_DIR: ${{ github.workspace }}/source
+          OCPR_EVIDENCE_DIR: ${{ runner.temp }}/mcp-list-ui
+        run: node --experimental-strip-types ../proof/ocpr-mcp-proof/verify.mjs
+      - name: Verify source remained unchanged
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 03c52603809431308d5d6f434e4ef054b29ca85a
+          test -z "$(git status --porcelain)"
+      - name: Preserve actual preview and original-download evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: mcp-list-ui-${{ github.run_id }}
+          path: ${{ runner.temp }}/mcp-list-ui
+          retention-days: 3
+          if-no-files-found: error
+      - name: Typecheck and lint exact source
+        run: |
+          pnpm typecheck
+          pnpm lint
+          pnpm i18n:check
