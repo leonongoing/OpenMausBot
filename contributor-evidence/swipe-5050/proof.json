@@ -1,0 +1,97 @@
+{
+  "sourceHead": "0d186ade640af75bcb178df01edb733171ec0b56",
+  "runId": 42884218366,
+  "runUrl": "https://github.com/leonongoing/OpenMausBot/actions/runs/42884218366",
+  "platform": "Headless Chrome156 on Ubuntu,390x844,mobile emulation,2touch points",
+  "qualification": "Synthetic isolated fixture; not physical Android. Original upstream components loaded for before control. Native trusted touch and real composer sends for after. No full suite pass claim.",
+  "cases": [
+    {
+      "surface": "chat",
+      "marker": "SWIPE_USER_RELEASE_3",
+      "sourceId": "bae45532-89d4-44e8-b498-03ae2516f6d0",
+      "savedReplyIds": [
+        "110f7ca7-cdd9-4707-809d-b91afa7154a4"
+      ],
+      "savedReplyToIds": [
+        "bae45532-89d4-44e8-b498-03ae2516f6d0"
+      ],
+      "moving": {
+        "translate": "80px",
+        "icon": true,
+        "quote": null
+      },
+      "releasedQuote": "Replying to You:\nSWIPE_USER_RELEASE_3: Please review the release checklist. These are isolated fixture notes, with no customer or account data. These are isolated fixture notes\u2026"
+    },
+    {
+      "surface": "chat",
+      "marker": "SWIPE_BOT_RELEASE",
+      "sourceId": "13ffe8fa-ec7f-45c8-9bbd-b5060a6b044a",
+      "savedReplyIds": [
+        "ecfe0437-a63e-4b6c-b084-34c051e01274"
+      ],
+      "savedReplyToIds": [
+        "13ffe8fa-ec7f-45c8-9bbd-b5060a6b044a"
+      ],
+      "moving": {
+        "translate": "80px",
+        "icon": true,
+        "quote": null
+      },
+      "releasedQuote": "Replying to Pepper:\nSWIPE_BOT_RELEASE: The release checklist is ready. This is synthetic verification text. Check the owner, the schedule, the backup and the release notes before\u2026"
+    },
+    {
+      "surface": "room",
+      "marker": "SWIPE_ROOM_USER",
+      "sourceId": "f476463d-0f54-45f9-9565-5d346ab56924",
+      "savedReplyIds": [
+        "0a4e2b33-c664-42c7-9ca9-ae7ee7d73e66"
+      ],
+      "savedReplyToIds": [
+        "f476463d-0f54-45f9-9565-5d346ab56924"
+      ],
+      "moving": {
+        "translate": "80px",
+        "icon": true,
+        "quote": null
+      },
+      "releasedQuote": "Replying to You:\nSWIPE_ROOM_USER: Please review this isolated release checklist."
+    },
+    {
+      "surface": "room",
+      "marker": "SWIPE_BOT_RELEASE",
+      "sourceId": "b5fd4a10-917f-4f76-9ae0-27537278ad58",
+      "savedReplyIds": [
+        "47bcd741-7390-49ee-bb1e-b05627d9c0c3"
+      ],
+      "savedReplyToIds": [
+        "b5fd4a10-917f-4f76-9ae0-27537278ad58"
+      ],
+      "moving": {
+        "translate": "80px",
+        "icon": true,
+        "quote": null
+      },
+      "releasedQuote": "Replying to Pepper:\nSWIPE_BOT_RELEASE: The release checklist is ready. This is synthetic verification text. Check the owner, the schedule, the backup and the release notes before\u2026"
+    }
+  ],
+  "sha256": {
+    "before-room-SWIPE_ROOM_USER-drag.png": "83f89bbcf81a01286592b34e96f560e03b5b7596d8cde8448643d3ff127b943b",
+    "after-room-SWIPE_ROOM_USER-released.png": "c72c37f149b59049182494963c766379aa6ec234e0e39f257b5abe4c524b64c1",
+    "after-room-SWIPE_BOT_RELEASE-drag.png": "f82708e42a6b14f5b32e375c011d509857d68f60aa4fdf9a300df03039846ccd",
+    "before-native-swipe.mp4": "1035a25958c9163f6eef2af08da9f04b707819acaac703e824ca44747e36d5db",
+    "after-chat-SWIPE_USER_RELEASE_3-released.png": "5ffb772620e812798632f862bb1958881cc845dc33b6e72d1a40b309b64d6f2b",
+    "after-chat-SWIPE_BOT_RELEASE-released.png": "2efa12e563c1b9df54833969e30327c0595d648a5758b8e569fe7828f84c4e08",
+    "before-chat-SWIPE_USER_RELEASE_3-drag.png": "9ec0d28e5c5b7cb65941b36abff7d0753a75eee89d28e3b33a18a05b9ade7f6b",
+    "before-room-SWIPE_BOT_RELEASE-drag.png": "90e9a85d1ffe9353ca5da060f94b6fbab14ce2c43890d2123a36cf308ffd549c",
+    "before-chat-SWIPE_USER_RELEASE_3-released.png": "dc130a33304c8e0b5c6e3297f91ea18ecf079e2fdcd790123fab938d11a8d354",
+    "before-room-SWIPE_BOT_RELEASE-released.png": "90e9a85d1ffe9353ca5da060f94b6fbab14ce2c43890d2123a36cf308ffd549c",
+    "before-room-SWIPE_ROOM_USER-released.png": "90e9a85d1ffe9353ca5da060f94b6fbab14ce2c43890d2123a36cf308ffd549c",
+    "after-room-SWIPE_ROOM_USER-drag.png": "a902fafeb94639ee90f30f6972980453fb33af8d004be9a6a223895e49f40f19",
+    "after-room-SWIPE_BOT_RELEASE-released.png": "81a4be3d386cdfaf6afec5956ea37b13557fed0e12be4c6317d500882094d8e7",
+    "after-chat-SWIPE_BOT_RELEASE-drag.png": "14931270f0762e6ed5b953af43982aa3f81182b299fce3e06d8404ebcc8fa8b2",
+    "before-chat-SWIPE_BOT_RELEASE-released.png": "037345796f3443411be4631d1290a77aa72bdb757af7d793c33be85b2acbaf65",
+    "before-chat-SWIPE_BOT_RELEASE-drag.png": "6e49f56bb846992e656c8fb0f097ba38dafd8e9d8a281c50971f6da76c4bf6e2",
+    "after-chat-SWIPE_USER_RELEASE_3-drag.png": "986567df9a4976632e2c460f9b0d05e830d5b7769950532eface165831a85613",
+    "after-native-swipe.mp4": "b52c60cc5f1b80ac2a0f428bf9cdf55e6f5844b97a17eef38e5dd9b876daf3dd"
+  }
+}
