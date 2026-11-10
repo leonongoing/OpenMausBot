@@ -1,0 +1,186 @@
+{
+  "sourceHead": "0a18d611401ea72a762b561fc65063c3613397f6",
+  "baseHead": "254a8c4c461da95f9bb0cf70ed50fa6852705f69",
+  "results": [
+    {
+      "mode": "before",
+      "layout": "desktop",
+      "width": 800,
+      "buttons": [
+        {
+          "label": "Steer",
+          "title": "Stop the running turn and send this message now",
+          "aria": "Stop the running turn and send this message now",
+          "left": 503.828125,
+          "right": 570,
+          "bottom": 88,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer next",
+          "title": "Stop the running turn and send the next queued message now",
+          "aria": "Stop the running turn and send the next queued message now",
+          "left": 473.796875,
+          "right": 570,
+          "bottom": 193,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer all",
+          "title": "Stop the running turn and send all 2 queued messages now",
+          "aria": "Stop the running turn and send all 2 queued messages now",
+          "left": 486.25,
+          "right": 570,
+          "bottom": 339,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer all",
+          "title": "Steer all 2 queued messages now",
+          "aria": "Steer all 2 queued messages now",
+          "left": 486.25,
+          "right": 570,
+          "bottom": 485,
+          "rowOverflow": false
+        }
+      ]
+    },
+    {
+      "mode": "before",
+      "layout": "mobile",
+      "width": 390,
+      "buttons": [
+        {
+          "label": "Steer",
+          "title": "Stop the running turn and send this message now",
+          "aria": "Stop the running turn and send this message now",
+          "left": 218.828125,
+          "right": 285,
+          "bottom": 88,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer next",
+          "title": "Stop the running turn and send the next queued message now",
+          "aria": "Stop the running turn and send the next queued message now",
+          "left": 188.796875,
+          "right": 285,
+          "bottom": 193,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer all",
+          "title": "Stop the running turn and send all 2 queued messages now",
+          "aria": "Stop the running turn and send all 2 queued messages now",
+          "left": 201.25,
+          "right": 285,
+          "bottom": 339,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer all",
+          "title": "Steer all 2 queued messages now",
+          "aria": "Steer all 2 queued messages now",
+          "left": 201.25,
+          "right": 285,
+          "bottom": 485,
+          "rowOverflow": false
+        }
+      ]
+    },
+    {
+      "mode": "after",
+      "layout": "desktop",
+      "width": 800,
+      "buttons": [
+        {
+          "label": "Stop and send",
+          "title": "Stop the running turn and send this message now",
+          "aria": "Stop and send",
+          "left": 449.546875,
+          "right": 570,
+          "bottom": 88,
+          "rowOverflow": false
+        },
+        {
+          "label": "Stop and send next",
+          "title": "Stop the running turn and send the next queued message now",
+          "aria": "Stop and send next",
+          "left": 419.53125,
+          "right": 570,
+          "bottom": 193,
+          "rowOverflow": false
+        },
+        {
+          "label": "Stop and send all",
+          "title": "Stop the running turn and send all 2 queued messages now",
+          "aria": "Stop and send all",
+          "left": 431.984375,
+          "right": 570,
+          "bottom": 339,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer all",
+          "title": "Steer all 2 queued messages now",
+          "aria": "Steer all 2 queued messages now",
+          "left": 486.25,
+          "right": 570,
+          "bottom": 485,
+          "rowOverflow": false
+        }
+      ]
+    },
+    {
+      "mode": "after",
+      "layout": "mobile",
+      "width": 390,
+      "buttons": [
+        {
+          "label": "Stop and send",
+          "title": "Stop the running turn and send this message now",
+          "aria": "Stop and send",
+          "left": 164.546875,
+          "right": 285,
+          "bottom": 88,
+          "rowOverflow": false
+        },
+        {
+          "label": "Stop and send next",
+          "title": "Stop the running turn and send the next queued message now",
+          "aria": "Stop and send next",
+          "left": 134.53125,
+          "right": 285,
+          "bottom": 193,
+          "rowOverflow": false
+        },
+        {
+          "label": "Stop and send all",
+          "title": "Stop the running turn and send all 2 queued messages now",
+          "aria": "Stop and send all",
+          "left": 146.984375,
+          "right": 285,
+          "bottom": 339,
+          "rowOverflow": false
+        },
+        {
+          "label": "Steer all",
+          "title": "Steer all 2 queued messages now",
+          "aria": "Steer all 2 queued messages now",
+          "left": 201.25,
+          "right": 285,
+          "bottom": 485,
+          "rowOverflow": false
+        }
+      ]
+    }
+  ],
+  "scope": "Real queue component in isolated Chromium/Vite fixture; no turn dispatch or physical device.",
+  "runId": 42898276661,
+  "sha256": {
+    "before-desktop.png": "2fb7922dcd969161034d7d9fa4fa2dc770aa3e7a33ed7bc8e49ed2c4f7660275",
+    "before-mobile.png": "da825e6463c1195469c276dea7d1ee62039d51bf54f23599b65556cbc37323c7",
+    "after-desktop.png": "22dbf87a608dda29d9cf4b581c682478f5abda2be18153dd89d9cedf969be9ef",
+    "after-mobile.png": "a107f2d8f3e7fa3ab3e6c39dbd1cdbf3ba2f7f7fc613abd2ae3df7d82f78cf9a"
+  }
+}
