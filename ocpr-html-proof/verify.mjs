@@ -33,7 +33,10 @@ try {
   await waitFor(`!document.querySelector('[data-mausbot-welcome-later]')&&document.querySelector('textarea')&&document.querySelector('[data-composer-row] input[type=file]')`,'Composer not hydrated');
   const workspace=join(ui.info.fixture.dataDir,'workspaces',ui.info.botId);mkdirSync(workspace,{recursive:true});
   const deliveredFile=join(workspace,name);writeFileSync(deliveredFile,source);
-  writeFileSync(join(evidence,`${mode}-tool-calls.json`),JSON.stringify([{name:'attach_file',server:'agents',input:{path:deliveredFile}}]));
+  const planPath=join(ui.info.fixture.dataDir,'room-plan.json');
+  const plan=JSON.parse(readFileSync(planPath,'utf8'));
+  plan[ui.info.botId].script.push({key:'attach-html',match:['Please attach the synthetic HTML report.'],steps:[{tool:'attach_file',arguments:{path:deliveredFile}}],reply:'The synthetic HTML report is attached.'});
+  writeFileSync(planPath,JSON.stringify(plan));
   await click(`document.querySelector('textarea')`);
   await ui.page.send('Input.insertText',{text:'Please attach the synthetic HTML report.'});
   await waitFor(`document.querySelector('button[aria-label="Send message"]:not(:disabled)')`,'Composer send not ready');

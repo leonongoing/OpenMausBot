@@ -61,13 +61,14 @@ export async function launchHtmlUi(mode) {
       catch (error) { abortReason = String(error); void close(); }
     }, 5000);
     timer.unref();
-    fixture = await launchVerificationServer({ ...process.env, FAKE_CLAUDE_TOOL_CALLS_FILE: join(evidence,`${mode}-tool-calls.json`), FAKE_CLAUDE_REPLIES: JSON.stringify(Array(20).fill('This is a synthetic attachment preview verification.')) });
+    fixture = await launchVerificationServer({ ...process.env }, undefined, undefined, undefined, undefined, { scripted: true });
     ownedPids.push(fixture.info.pid);progress('isolated-server-started');assertActive();
     const api=fixtureApi(fixture.info.url);
     const control=async args=>{assertActive();const result=await runControlOmb([...args,'--url',fixture.info.url]);assertActive();return result;};
     await control(['new-bot','--name','Pepper']);
     const {bots}=await api('GET','/api/bots?messages=0');
     const pepper=bots.find(bot=>bot.name==='Pepper');if(!pepper)throw Error('Fixture bot missing');
+    writeFileSync(join(fixture.info.dataDir,'room-plan.json'),JSON.stringify({[pepper.id]:{script:[{key:'seed',match:['Prepare to review a synthetic HTML attachment.'],reply:'Ready to review the synthetic report.'}]}}));
     await control(['send','--bot',pepper.id,'--text','Prepare to review a synthetic HTML attachment.']);
     const settled=await control(['wait','--bot',pepper.id,'--timeout','30']);
     if(settled.status!=='settled')throw Error('Fixture chat did not settle');
