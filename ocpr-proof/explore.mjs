@@ -104,6 +104,12 @@ try {
     cases.push(result);
     }
   }
+  await ui.page.evaluate(`window.__longPressWheel=[];document.addEventListener('wheel',e=>window.__longPressWheel.push({trusted:e.isTrusted,deltaY:e.deltaY,targetRow:e.target.closest?.('[data-mid]')?.getAttribute('data-mid')}),{once:true,passive:true});`);
+  await ui.page.send('Input.dispatchMouseEvent',{type:'mouseWheel',x:180,y:400,deltaX:0,deltaY:-240});
+  await waitFor(`document.querySelector('button[aria-label="Jump to latest messages"]')`,'Upward user scroll did not suspend following latest');
+  const scrollSetup=await ui.page.evaluate('window.__longPressWheel');
+  if(!scrollSetup.some(e=>e.trusted&&e.deltaY<0))throw Error('Scroll setup did not use trusted input');
+  writeFileSync(join(evidence,`${mode}-longpress-scroll-setup.json`),JSON.stringify({scrollSetup,followingLatestSuspended:true},null,2)+'\n');
   const originalRoomMessage=cases.find(c=>c.surface==='room'&&c.marker==='SWIPE_ROOM_USER').point.id;
   const longPressRow=`document.querySelector('[data-mid="${originalRoomMessage}"] [data-message-row]')`;
   const longPressPoint=await ui.page.evaluate(`new Promise((resolve,reject)=>{
