@@ -81,6 +81,9 @@ export async function launchSwipeUi(mode) {
       const settled = await control(['wait', '--bot', pepper.id, '--timeout', '30']);
       if (settled.status !== 'settled') throw Error('Fixture chat did not settle: ' + JSON.stringify(settled));
     }
+    await control(['send-channel','--channel',room.id,'--text','SWIPE_ROOM_USER: Please review this isolated release checklist.']);
+    const roomSettled=await control(['wait','--channel',room.id,'--timeout','30']);
+    if(roomSettled.status!=='settled')throw Error('Fixture room did not settle: '+JSON.stringify(roomSettled));
     const snapshots = new Map(sourcePaths.map(path => {
       const text = execFileSync('/usr/bin/git', ['show', `${baseline}:${path}`], { cwd: root, encoding: 'utf8' });
       return [join(root, path), { path, text, sha256: hash(text), gitBlob: git(['rev-parse', `${baseline}:${path}`]) }];

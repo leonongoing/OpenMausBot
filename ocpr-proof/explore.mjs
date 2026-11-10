@@ -57,7 +57,13 @@ try {
   await ui.page.send('Page.startScreencast',{format:'png',maxWidth:390,maxHeight:844,everyNthFrame:1});
   await ui.page.evaluate(`window.__swipeEvents=[];for(const name of ['touchstart','touchmove','touchend','touchcancel']) document.addEventListener(name,e=>window.__swipeEvents.push({type:e.type,trusted:e.isTrusted,cancelable:e.cancelable,prevented:e.defaultPrevented}),{passive:true});`);
   const cases=[];
-  for(const marker of ['SWIPE_USER_RELEASE_3','SWIPE_BOT_RELEASE']) {
+  for(const surface of [{kind:'chat',markers:['SWIPE_USER_RELEASE_3','SWIPE_BOT_RELEASE']},{kind:'room',markers:['SWIPE_ROOM_USER','SWIPE_BOT_RELEASE']}]) {
+    if(surface.kind==='room') {
+      await tap(`document.querySelector('button[aria-label="Open bot list"]')`);
+      await tap(`document.querySelector('[data-sidebar-group-row="${ui.info.roomId}"]')`);
+      await waitFor(`document.querySelector('textarea')&&[...document.querySelectorAll('[data-message-row]')].some(r=>r.innerText.includes('SWIPE_ROOM_USER'))`,'Seeded room did not open');
+    }
+    for(const marker of surface.markers) {
     const targetExpression=`[...document.querySelectorAll('[data-message-row]')].filter(r=>r.innerText.includes(${JSON.stringify(marker)})).at(-1)`;
     const point=await ui.page.evaluate(`(()=>{const row=${targetExpression};if(!row)throw Error('Missing swipe row');const p=row.querySelector('p')||row.querySelector('.chat-text')||row;p.scrollIntoView({block:'center'});const r=p.getBoundingClientRect();return {x:Math.max(20,Math.min(innerWidth-110,r.x+20)),y:Math.max(60,Math.min(innerHeight-160,r.y+20)),id:row.closest('[data-mid]')?.getAttribute('data-mid'),text:row.innerText.slice(0,200)};})()`);
     if(!point.id)throw Error('Message source ID missing');
@@ -67,18 +73,37 @@ try {
       await ui.page.evaluate('new Promise(resolve=>requestAnimationFrame(resolve))');
     }
     const moving=await ui.page.evaluate(`({translate:(${targetExpression}).style.translate,icon:Boolean(document.querySelector('[data-swipe-reply]')),quote:document.querySelector('[data-composer-reply]')?.innerText??null})`);
-    writeFileSync(join(evidence,`${mode}-${marker}-drag.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
+    writeFileSync(join(evidence,`${mode}-${surface.kind}-${marker}-drag.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     if(mode==='after')await waitFor(`Boolean(document.querySelector('[data-composer-reply]'))`,'Swipe did not open quote preview');
     else await ui.page.evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     const released=await ui.page.evaluate(`({translate:(${targetExpression}).style.translate,quote:document.querySelector('[data-composer-reply]')?.innerText??null,events:window.__swipeEvents.splice(0)})`);
     if(mode==='before'&&released.quote)throw Error('Baseline unexpectedly supports swipe reply');
     if(mode==='after'&&(!released.quote?.includes(marker)||moving.quote||!moving.icon||moving.translate!=='80px'||!released.events.some(e=>e.type==='touchmove'&&e.trusted&&e.prevented)))throw Error('Swipe quote/gesture contract failed: '+JSON.stringify({moving,released}));
-    writeFileSync(join(evidence,`${mode}-${marker}-released.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
-    cases.push({marker,point,moving,released});
-    if(mode==='after')await tap(`document.querySelector('[data-composer-reply] button')`);
+    if(mode==='after')await waitFor(`Math.abs(parseFloat(getComputedStyle(${targetExpression}).translate)||0)<0.1`,'Message did not return after release');
+    writeFileSync(join(evidence,`${mode}-${surface.kind}-${marker}-released.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
+    const result={surface:surface.kind,marker,point,moving,released};
+    if(mode==='after') {
+      const text=`NATIVE_QUOTE_READBACK_${surface.kind}_${marker}`;
+      if(!await ui.page.evaluate(`document.activeElement===document.querySelector('textarea')`))throw Error('Selecting reply did not focus composer');
+      await ui.page.send('Input.insertText',{text});
+      await waitFor(`document.querySelector('button[aria-label="Send message"]:not(:disabled)')`,'Send button not ready');
+      await tap(`document.querySelector('button[aria-label="Send message"]')`);
+      const target=surface.kind==='chat'?['--bot',ui.info.botId]:['--channel',ui.info.roomId];
+      const settled=await ui.control(['wait',...target,'--timeout','30']);
+      if(settled.status!=='settled')throw Error('Native reply did not settle: '+JSON.stringify(settled));
+      const transcript=await ui.control(['messages',...target,'--limit','40']);
+      const found=[];
+      const visit=value=>{if(!value||typeof value!=='object')return;if(value.text===text)found.push(value);for(const child of Object.values(value))if(child&&typeof child==='object')visit(child);};
+      visit(transcript);
+      if(!found.length||!found.every(m=>m.replyToId===point.id))throw Error('Saved reply does not reference swiped message: '+JSON.stringify({sourceId:point.id,found,transcript}));
+      result.savedReply=found;result.wait=settled;
+      writeFileSync(join(evidence,`${mode}-${surface.kind}-${marker}-transcript.json`),JSON.stringify(transcript,null,2)+'\n');
+    }
+    cases.push(result);
+    }
   }
-  writeFileSync(join(evidence,`${mode}-native-touch.json`),JSON.stringify({source:ui.info.expectedHead,mode,cases,qualification:'Chrome mobile emulation; not physical Android. Chat user/bot swipe and quote only; room, scrolling, selection and long press still pending.'},null,2)+'\n');
+  writeFileSync(join(evidence,`${mode}-native-touch.json`),JSON.stringify({source:ui.info.expectedHead,mode,cases,qualification:'Chrome mobile emulation; not physical Android. Chat and room user/bot swipe, quote preview and saved source ID readback; scrolling, selection and long press browser checks still pending.'},null,2)+'\n');
   await ui.page.evaluate('new Promise(resolve=>setTimeout(resolve,250))');
   await ui.page.send('Page.stopScreencast');
   if(frames.length<3||screencastErrors.length)throw Error('Screencast failed: '+JSON.stringify({frames:frames.length,screencastErrors}));
