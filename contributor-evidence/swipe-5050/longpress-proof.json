@@ -1,0 +1,52 @@
+{
+  "at": "2026-11-10T19:51:50.407507+00:00",
+  "runId": 42888894116,
+  "url": "https://github.com/leonongoing/OpenMausBot/actions/runs/42888894116",
+  "sourceHead": "0d186ade640af75bcb178df01edb733171ec0b56",
+  "beforeAfter": {
+    "before": {
+      "mode": "before",
+      "source": "0d186ade640af75bcb178df01edb733171ec0b56",
+      "point": {
+        "x": 146,
+        "y": 134.5,
+        "sourceId": "6040746b-908c-47e7-a6c8-4e3fe0e1099c",
+        "hitRow": "6040746b-908c-47e7-a6c8-4e3fe0e1099c",
+        "rect": {
+          "x": 126,
+          "y": 114.5,
+          "width": 192.34375,
+          "height": 66
+        }
+      },
+      "actionsExposed": true,
+      "replyViaExistingAction": true,
+      "quote": "Replying to You:\nSWIPE_ROOM_USER: Please review this isolated release checklist."
+    },
+    "after": {
+      "mode": "after",
+      "source": "0d186ade640af75bcb178df01edb733171ec0b56",
+      "point": {
+        "x": 146,
+        "y": 134.5,
+        "sourceId": "740db380-f183-45a2-b18c-84787c6373b0",
+        "hitRow": "740db380-f183-45a2-b18c-84787c6373b0",
+        "rect": {
+          "x": 126,
+          "y": 114.5,
+          "width": 192.34375,
+          "height": 66
+        }
+      },
+      "actionsExposed": true,
+      "replyViaExistingAction": true,
+      "quote": "Replying to You:\nSWIPE_ROOM_USER: Please review this isolated release checklist."
+    }
+  },
+  "setup": "Trusted upward scroll uses existing app interaction to suspend bottom follow, then trusted long press exposes actions and native Reply action opens quote. Before and after both pass.",
+  "qualification": "Chrome mobile emulation, not physical Android. Full pnpmtest remains separate.",
+  "sha256": {
+    "before-longpress-reply.png": "a4e3dc3744708bac4874594bd814f7c88b7ab4b4fdd9baee2a3bf3780aefa9ad",
+    "after-longpress-reply.png": "686696a3c6cb34365e44e2103aba2a9e9212570ccc15967dc9ae60a856bace67"
+  }
+}
