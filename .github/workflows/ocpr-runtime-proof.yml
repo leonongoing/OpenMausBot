@@ -1,19 +1,45 @@
-name: Contributor runner availability probe
+name: Contributor swipe reply validation
 on:
   push:
     branches: [leon/proof-runtime-20261110]
 permissions:
   contents: read
 jobs:
-  availability:
+  source-typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
     steps:
-      - name: Observe runner availability only
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 0d186ade640af75bcb178df01edb733171ec0b56
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+      - name: Verify source identity
         shell: bash
         run: |
           set -euo pipefail
-          date -u '+%Y-%m-%dT%H:%M:%SZ'
+          test "$(git rev-parse HEAD)" = 0d186ade640af75bcb178df01edb733171ec0b56
+          test -z "$(git status --porcelain)"
           node --version
-          test -d "$RUNNER_TEMP"
-          echo 'Runner probe only; no project validation was run.'
+          pnpm --version
+      - run: pnpm install --frozen-lockfile
+      - name: Full source typecheck
+        run: pnpm typecheck
+      - name: Complete message input and size guards
+        run: pnpm exec vitest run src/components/MessageActions.swipe.dom.test.ts src/components/MessageActions.test.ts src/components/MessageActions.toggle.test.ts src/components/MessageActions.idle.dom.test.ts src/components/touch-actions.test.ts scripts/testing/file-size-ratchet.test.ts --maxWorkers=1
+      - run: pnpm lint
+      - run: pnpm i18n:check
+      - run: pnpm check:contrast
+      - name: Verify source stayed clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 0d186ade640af75bcb178df01edb733171ec0b56
+          test -z "$(git status --porcelain)"
