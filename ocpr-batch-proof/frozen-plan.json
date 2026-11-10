@@ -1,0 +1,102 @@
+{
+  "at": "2026-11-10T20:16:49.839847+00:00",
+  "repository": "leonongoing/OpenMausBot",
+  "isPublic": true,
+  "ownedOpenPrCount": 18,
+  "selectedCount": 13,
+  "maxParallel": 8,
+  "runner": "ubuntu-latest standard GitHub-hosted",
+  "excluded": {
+    "5200": "independent Linux full run42880694079 and Mac77229alreadyactive",
+    "5319": "independent Linux full run42884469552alreadyactive",
+    "5241": "docs-only Windows instructions",
+    "5260": "docs-only BYOVPS published documentation",
+    "5296": "docs-only feature-switch reference"
+  },
+  "cases": [
+    {
+      "pr": 5218,
+      "head": "69748c8053b2d99ba656173f323ba5c2931f7a5a",
+      "branch": "leon/fix-memory-dream-timeout-5213",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5218"
+    },
+    {
+      "pr": 5220,
+      "head": "b6ce625606ce579e1695c1daa4a7a986b9deb84b",
+      "branch": "leon/fix-acknowledged-model-holds-4875",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5220"
+    },
+    {
+      "pr": 5227,
+      "head": "c693badfec13dc0b5b5aa3e7449259dfd55449d3",
+      "branch": "leon/fix-browser-reset-5096",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5227"
+    },
+    {
+      "pr": 5228,
+      "head": "41c442d3f126d7d239f2e2afa397afbc32e2f03f",
+      "branch": "leon/fix-vps-selector-5225",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5228"
+    },
+    {
+      "pr": 5237,
+      "head": "59f79c92a6e76eab86ac509734213baec71688df",
+      "branch": "leon/test-mcp-private-config-env",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5237"
+    },
+    {
+      "pr": 5247,
+      "head": "2a6b9778273d81b834e2dff5cfc0c74d09f0ad19",
+      "branch": "leon/fix-saved-server-start-5244",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5247"
+    },
+    {
+      "pr": 5250,
+      "head": "54f9f249c98e490b59845fcabd021be0bbf8f785",
+      "branch": "leon/test-engine-pins-unsupported-platform",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5250"
+    },
+    {
+      "pr": 5252,
+      "head": "a47806be7613665b8c6b9df5fa6fd9b26f387844",
+      "branch": "leon/test-chrome-aim-background",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5252"
+    },
+    {
+      "pr": 5253,
+      "head": "0a41d9e135541e34cdea6847c9c1556ae8806131",
+      "branch": "leon/fix-pairing-fallback-5249",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5253"
+    },
+    {
+      "pr": 5268,
+      "head": "d1bceff1730ea162f3291050447ac6c99739b86a",
+      "branch": "leon/fix-composer-video-5262",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5268"
+    },
+    {
+      "pr": 5269,
+      "head": "057a885f6a8283e31cf6be1cfd7f88f792827cf2",
+      "branch": "leon/fix-claude-usage-opt-out-5079",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5269"
+    },
+    {
+      "pr": 5306,
+      "head": "a4c067b1a3fdae7f4224ddff4521f5cc624f56a8",
+      "branch": "leon/test-cloud-sync-free-space",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5306"
+    },
+    {
+      "pr": 5322,
+      "head": "961198857d94718c98b1309819cdd0b0dc6b0f7e",
+      "branch": "leon/fix-html-preview-notice-5318",
+      "url": "https://github.com/milind-soni/OpenMausBot/pull/5322"
+    }
+  ],
+  "scope": "Finite13head exact-source fulltypecheck and unfiltered pnpmtest, standardprojectCIretry policy logged, unreached components separately onfailure. LocalMacchecks remain distinct. No cancellation/restart of current5200/5319 full runs.",
+  "billingAndLimitsSources": [
+    "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "https://docs.github.com/en/actions/reference/limits"
+  ],
+  "storage": "Current fork19artifacts163230475bytes; compressed full logs small; batch artifacts1dayretention. No larger runner."
+}

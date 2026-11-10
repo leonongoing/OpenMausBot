@@ -1,0 +1,99 @@
+name: Contributor exact-source full validation batch
+on:
+  push:
+    branches: [leon/proof-full-batch-20261110]
+permissions:
+  contents: read
+jobs:
+  full-validation:
+    name: "PR #${{ matrix.pr }} full"
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - pr: 5218
+            head: 69748c8053b2d99ba656173f323ba5c2931f7a5a
+          - pr: 5220
+            head: b6ce625606ce579e1695c1daa4a7a986b9deb84b
+          - pr: 5227
+            head: c693badfec13dc0b5b5aa3e7449259dfd55449d3
+          - pr: 5228
+            head: 41c442d3f126d7d239f2e2afa397afbc32e2f03f
+          - pr: 5237
+            head: 59f79c92a6e76eab86ac509734213baec71688df
+          - pr: 5247
+            head: 2a6b9778273d81b834e2dff5cfc0c74d09f0ad19
+          - pr: 5250
+            head: 54f9f249c98e490b59845fcabd021be0bbf8f785
+          - pr: 5252
+            head: a47806be7613665b8c6b9df5fa6fd9b26f387844
+          - pr: 5253
+            head: 0a41d9e135541e34cdea6847c9c1556ae8806131
+          - pr: 5268
+            head: d1bceff1730ea162f3291050447ac6c99739b86a
+          - pr: 5269
+            head: 057a885f6a8283e31cf6be1cfd7f88f792827cf2
+          - pr: 5306
+            head: a4c067b1a3fdae7f4224ddff4521f5cc624f56a8
+          - pr: 5322
+            head: 961198857d94718c98b1309819cdd0b0dc6b0f7e
+    defaults:
+      run:
+        working-directory: source
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: proof
+          sparse-checkout: ocpr-batch-proof
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ matrix.head }}
+          path: source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: source/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Verify frozen public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ matrix.head }}"
+          test -z "$(git status --porcelain)"
+          git rev-parse HEAD
+          node --version
+          pnpm --version
+          google-chrome --version
+      - name: Prepare Electron test runtime
+        run: node --input-type=commonjs -e "require('electron')"
+      - name: Full typecheck and unfiltered pnpm test
+        env:
+          OCPR_SOURCE_DIR: ${{ github.workspace }}/source
+          OCPR_EVIDENCE_DIR: ${{ runner.temp }}/full-pr-${{ matrix.pr }}
+          OCPR_SOURCE_HEAD: ${{ matrix.head }}
+          OCPR_PR: ${{ matrix.pr }}
+        run: node ../proof/ocpr-batch-proof/run-full.mjs
+      - name: Preserve complete result and retry records
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: full-pr-${{ matrix.pr }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/full-pr-${{ matrix.pr }}
+          retention-days: 1
+          compression-level: 9
+          if-no-files-found: warn
