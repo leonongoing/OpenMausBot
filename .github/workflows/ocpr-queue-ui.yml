@@ -45,6 +45,7 @@ jobs:
           google-chrome --version
       - name: Capture original and changed queue controls
         env:
+          OCPR_SOURCE_DIR: ${{ github.workspace }}/source
           OCPR_EVIDENCE_DIR: ${{ runner.temp }}/queued-action-ui
         run: node --experimental-strip-types ../proof/ocpr-queue-proof/verify.mjs
       - name: Verify source remained unchanged
