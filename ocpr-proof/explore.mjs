@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { launchSwipeUi } from './ui-session.mjs';
@@ -18,12 +19,14 @@ try {
       if(Date.now()>deadline)return reject(Error(${JSON.stringify(label)}));
       setTimeout(check,100);};check();})`,95000);
   const tap = async expression => {
+    await waitFor(`(()=>{const el=${expression};if(!el)return false;const r=el.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));})()`,'Tap target is not visible or is covered');
     const point=await ui.page.evaluate(`(()=>{const el=${expression};if(!el)throw Error('Tap target missing');const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...point,id:1}]});
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   };
   await waitFor(`document.querySelector('[data-message-row]') || [...document.querySelectorAll('button')].some(b=>b.innerText.includes('Pepper'))`, 'Hydrated bot list missing');
-  if(await ui.page.evaluate(`Boolean(document.querySelector('[data-mausbot-welcome-later]'))`)) {
+  await waitFor(`Boolean(document.querySelector('[data-mausbot-welcome-later]'))`,'Expected fixture first-run welcome missing');
+  {
     await tap(`document.querySelector('[data-mausbot-welcome-later]')`);
     await waitFor(`!document.querySelector('[data-mausbot-welcome-later]')`,'Welcome dialog did not dismiss');
   }
@@ -45,6 +48,50 @@ try {
   const screenshot = await ui.page.screenshot();
   writeFileSync(join(evidence, `${mode}-initial.png`), Buffer.from(screenshot.data, 'base64'));
   writeFileSync(join(evidence, `${mode}-initial-dom.json`), JSON.stringify({ at: new Date().toISOString(), info: ui.info, dom, runtimeErrors, baselineLoaded: ui.baselineLoaded(), applicationLoaded: true, inputAssertionsRun: false, qualification: 'Exploration only. No gesture, quote selection or animation claim yet.' }, null, 2) + '\n');
+  const frames=[],screencastErrors=[];
+  ui.page.on('Page.screencastFrame',event=>{
+    const file=`${mode}-frame-${String(frames.length).padStart(5,'0')}.png`;
+    writeFileSync(join(evidence,file),Buffer.from(event.data,'base64'));
+    frames.push({file,timestamp:event.metadata.timestamp});
+    void ui.page.send('Page.screencastFrameAck',{sessionId:event.sessionId}).catch(e=>screencastErrors.push(String(e)));
+  });
+  await ui.page.send('Page.startScreencast',{format:'png',maxWidth:390,maxHeight:844,everyNthFrame:1});
+  await ui.page.evaluate(`window.__swipeEvents=[];for(const name of ['touchstart','touchmove','touchend','touchcancel']) document.addEventListener(name,e=>window.__swipeEvents.push({type:e.type,trusted:e.isTrusted,cancelable:e.cancelable,prevented:e.defaultPrevented}),{passive:true});`);
+  const cases=[];
+  for(const marker of ['SWIPE_USER_RELEASE_3','SWIPE_BOT_RELEASE']) {
+    const targetExpression=`[...document.querySelectorAll('[data-message-row]')].filter(r=>r.innerText.includes(${JSON.stringify(marker)})).at(-1)`;
+    const point=await ui.page.evaluate(`(()=>{const row=${targetExpression};if(!row)throw Error('Missing swipe row');const p=row.querySelector('p')||row;p.scrollIntoView({block:'center'});const r=p.getBoundingClientRect();return {x:Math.max(20,Math.min(innerWidth-110,r.x+20)),y:Math.max(60,Math.min(innerHeight-160,r.y+20)),id:row.closest('[data-mid]')?.getAttribute('data-mid'),text:row.innerText.slice(0,200)};})()`);
+    if(!point.id)throw Error('Message source ID missing');
+    await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:point.x,y:point.y,id:1}]});
+    for(const dx of [2,6,14,30,50,70,82]) {
+      await ui.page.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:point.x+dx,y:point.y+1,id:1}]});
+      await ui.page.evaluate('new Promise(resolve=>requestAnimationFrame(resolve))');
+    }
+    const moving=await ui.page.evaluate(`({translate:(${targetExpression}).style.translate,icon:Boolean(document.querySelector('[data-swipe-reply]')),quote:document.querySelector('[data-composer-reply]')?.innerText??null})`);
+    writeFileSync(join(evidence,`${mode}-${marker}-drag.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
+    await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    if(mode==='after')await waitFor(`Boolean(document.querySelector('[data-composer-reply]'))`,'Swipe did not open quote preview');
+    else await ui.page.evaluate('new Promise(resolve=>setTimeout(resolve,300))');
+    const released=await ui.page.evaluate(`({translate:(${targetExpression}).style.translate,quote:document.querySelector('[data-composer-reply]')?.innerText??null,events:window.__swipeEvents.splice(0)})`);
+    if(mode==='before'&&released.quote)throw Error('Baseline unexpectedly supports swipe reply');
+    if(mode==='after'&&(!released.quote?.includes(marker)||moving.quote||!moving.icon||moving.translate!=='80px'||!released.events.some(e=>e.type==='touchmove'&&e.trusted&&e.prevented)))throw Error('Swipe quote/gesture contract failed: '+JSON.stringify({moving,released}));
+    writeFileSync(join(evidence,`${mode}-${marker}-released.png`),Buffer.from((await ui.page.screenshot()).data,'base64'));
+    cases.push({marker,point,moving,released});
+    if(mode==='after')await tap(`document.querySelector('[data-composer-reply] button')`);
+  }
+  writeFileSync(join(evidence,`${mode}-native-touch.json`),JSON.stringify({source:ui.info.expectedHead,mode,cases,qualification:'Chrome mobile emulation; not physical Android. Chat user/bot swipe and quote only; room, scrolling, selection and long press still pending.'},null,2)+'\n');
+  await ui.page.evaluate('new Promise(resolve=>setTimeout(resolve,250))');
+  await ui.page.send('Page.stopScreencast');
+  if(frames.length<3||screencastErrors.length)throw Error('Screencast failed: '+JSON.stringify({frames:frames.length,screencastErrors}));
+  const playlist=['ffconcat version 1.0'];
+  for(let i=0;i<frames.length;i++) {
+    playlist.push(`file '${frames[i].file}'`);
+    if(i<frames.length-1)playlist.push(`duration ${Math.max(0.001,frames[i+1].timestamp-frames[i].timestamp)}`);
+  }
+  playlist.push(`file '${frames.at(-1).file}'`);
+  writeFileSync(join(evidence,`${mode}-frames.ffconcat`),playlist.join('\n')+'\n');
+  const video=execFileSync('ffmpeg',['-hide_banner','-y','-f','concat','-safe','0','-i',join(evidence,`${mode}-frames.ffconcat`),'-fps_mode','vfr','-c:v','libx264','-pix_fmt','yuv420p',join(evidence,`${mode}-native-swipe.mp4`)],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
+  writeFileSync(join(evidence,`${mode}-screencast.json`),JSON.stringify({frames,screencastErrors,qualification:'Actual browser screencast frames and original timestamps; no synthetic animation'},null,2)+'\n');
   writeFileSync(join(evidence, `${mode}-server.log`), readFileSync(ui.info.fixture.logPath));
   if (runtimeErrors.length) throw Error('Application runtime exceptions: ' + JSON.stringify(runtimeErrors).slice(0,1000));
   console.log(JSON.stringify({ mode, applicationLoaded: true, source: ui.info.expectedHead, buttons: dom.buttons.length, rows: dom.rows.length, inputAssertionsRun: false }));
