@@ -1,27 +1,42 @@
-name: Contributor swipe reply validation
+name: Contributor swipe UI exploration
 on:
   push:
     branches: [leon/proof-runtime-20261110]
 permissions:
   contents: read
 jobs:
-  source-typecheck:
+  isolated-ui:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: source
     env:
       NODE_OPTIONS: --max-old-space-size=4096
+      OCPR_SOURCE_DIR: ${{ github.workspace }}/source
+      OCPR_EVIDENCE_DIR: ${{ runner.temp }}/swipe-ui
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          path: proof
+          sparse-checkout: ocpr-proof
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
           ref: 0d186ade640af75bcb178df01edb733171ec0b56
+          path: source
           fetch-depth: 2
           persist-credentials: false
       - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3
+        with:
+          version: 10.33.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
           cache: pnpm
-      - name: Verify source identity
+          cache-dependency-path: source/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Verify exact source and browser
         shell: bash
         run: |
           set -euo pipefail
@@ -29,17 +44,27 @@ jobs:
           test -z "$(git status --porcelain)"
           node --version
           pnpm --version
-      - run: pnpm install --frozen-lockfile
-      - name: Full source typecheck
-        run: pnpm typecheck
-      - name: Complete message input and size guards
-        run: pnpm exec vitest run src/components/MessageActions.swipe.dom.test.ts src/components/MessageActions.test.ts src/components/MessageActions.toggle.test.ts src/components/MessageActions.idle.dom.test.ts src/components/touch-actions.test.ts scripts/testing/file-size-ratchet.test.ts --maxWorkers=1
-      - run: pnpm lint
-      - run: pnpm i18n:check
-      - run: pnpm check:contrast
-      - name: Verify source stayed clean
+          google-chrome --version
+      - name: Observe original upstream message components
+        env:
+          NODE_OPTIONS: --max-old-space-size=512
+        run: node --experimental-strip-types ../proof/ocpr-proof/explore.mjs before
+      - name: Observe changed message components
+        env:
+          NODE_OPTIONS: --max-old-space-size=512
+        run: node --experimental-strip-types ../proof/ocpr-proof/explore.mjs after
+      - name: Verify source remained unchanged
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = 0d186ade640af75bcb178df01edb733171ec0b56
           test -z "$(git status --porcelain)"
+      - name: Preserve actual browser exploration artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: swipe-ui-exploration-${{ github.run_id }}
+          path: ${{ runner.temp }}/swipe-ui
+          retention-days: 3
+          if-no-files-found: error
