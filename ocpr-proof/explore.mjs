@@ -55,7 +55,7 @@ try {
     void ui.page.send('Page.screencastFrameAck',{sessionId:event.sessionId}).catch(e=>screencastErrors.push(String(e)));
   });
   await ui.page.send('Page.startScreencast',{format:'png',maxWidth:390,maxHeight:844,everyNthFrame:1});
-  await ui.page.evaluate(`window.__swipeEvents=[];for(const name of ['touchstart','touchmove','touchend','touchcancel']) document.addEventListener(name,e=>window.__swipeEvents.push({type:e.type,trusted:e.isTrusted,cancelable:e.cancelable,prevented:e.defaultPrevented}),{passive:true});`);
+  await ui.page.evaluate(`window.__swipeEvents=[];for(const name of ['touchstart','touchmove','touchend','touchcancel']) document.addEventListener(name,e=>window.__swipeEvents.push({type:e.type,trusted:e.isTrusted,cancelable:e.cancelable,prevented:e.defaultPrevented,targetRow:e.target.closest?.('[data-mid]')?.getAttribute('data-mid')}),{passive:true});`);
   const cases=[];
   for(const surface of [{kind:'chat',markers:['SWIPE_USER_RELEASE_3','SWIPE_BOT_RELEASE']},{kind:'room',markers:['SWIPE_ROOM_USER','SWIPE_BOT_RELEASE']}]) {
     if(surface.kind==='room') {
@@ -104,8 +104,25 @@ try {
     cases.push(result);
     }
   }
-  const longPressRow=`[...document.querySelectorAll('[data-message-row]')].find(r=>r.innerText.includes('SWIPE_ROOM_USER:'))`;
-  const longPressPoint=await ui.page.evaluate(`(()=>{const row=${longPressRow};if(!row)throw Error('Original room message missing');const text=row.querySelector('.chat-text')||row.querySelector('p')||row;text.scrollIntoView({block:'center'});const r=text.getBoundingClientRect();return {x:Math.min(innerWidth-40,r.x+20),y:Math.max(80,Math.min(innerHeight-160,r.y+20)),sourceId:row.closest('[data-mid]')?.getAttribute('data-mid')};})()`);
+  const originalRoomMessage=cases.find(c=>c.surface==='room'&&c.marker==='SWIPE_ROOM_USER').point.id;
+  const longPressRow=`document.querySelector('[data-mid="${originalRoomMessage}"] [data-message-row]')`;
+  const longPressPoint=await ui.page.evaluate(`new Promise((resolve,reject)=>{
+    const deadline=Date.now()+90000;let stable=0,previous='';
+    const check=()=>{
+      const row=${longPressRow};
+      if(!row)return reject(Error('Original room message missing'));
+      const text=row.querySelector('[data-citation-source="${originalRoomMessage}"]')||row;
+      text.scrollIntoView({block:'center',behavior:'instant'});
+      requestAnimationFrame(()=>{
+        const r=text.getBoundingClientRect();const x=Math.min(innerWidth-40,r.x+20),y=Math.max(80,Math.min(innerHeight-160,r.y+20));
+        const hit=document.elementFromPoint(x,y);const key=[r.x,r.y,r.width,r.height].join(',');
+        stable=row.contains(hit)&&key===previous?stable+1:0;previous=key;
+        if(stable>=3)return resolve({x,y,sourceId:row.closest('[data-mid]')?.getAttribute('data-mid'),hitRow:hit.closest('[data-mid]')?.getAttribute('data-mid'),rect:{x:r.x,y:r.y,width:r.width,height:r.height}});
+        if(Date.now()>deadline)return reject(Error('Original message did not become a stable touch target'));
+        check();
+      });
+    };check();})`,95000);
+  writeFileSync(join(evidence,`${mode}-longpress-target.json`),JSON.stringify({point:longPressPoint,expectedId:originalRoomMessage},null,2)+'\n');
   await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:longPressPoint.x,y:longPressPoint.y,id:1}]});
   await waitFor(`(${longPressRow}).querySelector('[data-testid="message-actions"][data-shown="true"]')`,'Long press did not expose message actions');
   await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
@@ -133,7 +150,7 @@ try {
 } catch (error) {
   let dom;
   try { const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64')); } catch {}
-  try { dom = await ui?.page.evaluate('({url:location.href,text:document.body.innerText,html:document.body.outerHTML.slice(0,100000)})'); } catch (e) { dom = { error: String(e) }; }
+  try { dom = await ui?.page.evaluate('({url:location.href,text:document.body.innerText,html:document.body.outerHTML.slice(0,100000),nativeTouchTrace:window.__swipeEvents,selection:window.getSelection()?.toString(),rows:[...document.querySelectorAll('[data-message-row]')].map(r=>({id:r.closest('[data-mid]')?.getAttribute('data-mid'),text:r.innerText.slice(0,160),rect:r.getBoundingClientRect().toJSON()}))})'); } catch (e) { dom = { error: String(e) }; }
   writeFileSync(join(evidence, `${mode}-explore-failure.json`), JSON.stringify({ at: new Date().toISOString(), error: String(error.stack || error), info: ui?.info, runtimeErrors, dom }, null, 2) + '\n');
   throw error;
 } finally {
