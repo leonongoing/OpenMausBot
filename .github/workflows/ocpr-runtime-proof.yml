@@ -1,0 +1,19 @@
+name: Contributor runner availability probe
+on:
+  push:
+    branches: [leon/proof-runtime-20261110]
+permissions:
+  contents: read
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Observe runner availability only
+        shell: bash
+        run: |
+          set -euo pipefail
+          date -u '+%Y-%m-%dT%H:%M:%SZ'
+          node --version
+          test -d "$RUNNER_TEMP"
+          echo 'Runner probe only; no project validation was run.'
