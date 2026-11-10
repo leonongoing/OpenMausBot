@@ -150,7 +150,7 @@ try {
 } catch (error) {
   let dom;
   try { const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64')); } catch {}
-  try { dom = await ui?.page.evaluate('({url:location.href,text:document.body.innerText,html:document.body.outerHTML.slice(0,100000),nativeTouchTrace:window.__swipeEvents,selection:window.getSelection()?.toString(),rows:[...document.querySelectorAll('[data-message-row]')].map(r=>({id:r.closest('[data-mid]')?.getAttribute('data-mid'),text:r.innerText.slice(0,160),rect:r.getBoundingClientRect().toJSON()}))})'); } catch (e) { dom = { error: String(e) }; }
+  try { dom = await ui?.page.evaluate(`({url:location.href,text:document.body.innerText,html:document.body.outerHTML.slice(0,100000),nativeTouchTrace:window.__swipeEvents,selection:window.getSelection()?.toString(),rows:[...document.querySelectorAll('[data-message-row]')].map(r=>({id:r.closest('[data-mid]')?.getAttribute('data-mid'),text:r.innerText.slice(0,160),rect:r.getBoundingClientRect().toJSON()}))})`); } catch (e) { dom = { error: String(e) }; }
   writeFileSync(join(evidence, `${mode}-explore-failure.json`), JSON.stringify({ at: new Date().toISOString(), error: String(error.stack || error), info: ui?.info, runtimeErrors, dom }, null, 2) + '\n');
   throw error;
 } finally {
