@@ -23,9 +23,14 @@ try {
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   };
   await waitFor(`document.querySelector('[data-message-row]') || [...document.querySelectorAll('button')].some(b=>b.innerText.includes('Pepper'))`, 'Hydrated bot list missing');
-  if(!await ui.page.evaluate(`Boolean(document.querySelector('[data-message-row]'))`)) {
-    await tap(`[...document.querySelectorAll('button')].find(b=>b.innerText.includes('Pepper'))`);
+  if(await ui.page.evaluate(`Boolean(document.querySelector('[data-mausbot-welcome-later]'))`)) {
+    await tap(`document.querySelector('[data-mausbot-welcome-later]')`);
+    await waitFor(`!document.querySelector('[data-mausbot-welcome-later]')`,'Welcome dialog did not dismiss');
   }
+  const pepperButton=`[...document.querySelectorAll('button')].find(b=>b.innerText.includes('Pepper'))`;
+  const visible=await ui.page.evaluate(`(()=>{const b=${pepperButton};const r=b?.getBoundingClientRect();return r&&r.x>=0&&r.x<innerWidth&&r.y>=0&&r.y<innerHeight;})()`);
+  if(!visible)await tap(`document.querySelector('button[aria-label="Open bot list"]')`);
+  await tap(pepperButton);
   await waitFor(`document.querySelector('textarea') && [...document.querySelectorAll('[data-message-row]')].some(r=>r.innerText.includes('SWIPE_USER_RELEASE_')) && [...document.querySelectorAll('[data-message-row]')].some(r=>r.innerText.includes('SWIPE_BOT_RELEASE'))`, 'Hydrated seeded conversation missing');
   ui.assertActive();
   const dom = await ui.page.evaluate(`({

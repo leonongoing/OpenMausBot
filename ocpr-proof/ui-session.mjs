@@ -64,7 +64,7 @@ export async function launchSwipeUi(mode) {
     const reply = 'SWIPE_BOT_RELEASE: The release checklist is ready.\n\n' +
       'This is synthetic verification text. Check the owner, the schedule, the backup and the release notes before proceeding. '.repeat(5) +
       '\n\n```text\n' + 'release_column_'.repeat(45) + '\n```';
-    fixture = await launchVerificationServer({ ...process.env, FAKE_CLAUDE_REPLIES: JSON.stringify([reply]) });
+    fixture = await launchVerificationServer({ ...process.env, FAKE_CLAUDE_REPLIES: JSON.stringify(Array(20).fill(reply)) });
     ownedPids.push(fixture.info.pid);
     progress('isolated-server-started');
     assertActive();
