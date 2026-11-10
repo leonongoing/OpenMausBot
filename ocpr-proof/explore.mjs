@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { launchSwipeUi } from './ui-session.mjs';
@@ -60,7 +59,7 @@ try {
   const cases=[];
   for(const marker of ['SWIPE_USER_RELEASE_3','SWIPE_BOT_RELEASE']) {
     const targetExpression=`[...document.querySelectorAll('[data-message-row]')].filter(r=>r.innerText.includes(${JSON.stringify(marker)})).at(-1)`;
-    const point=await ui.page.evaluate(`(()=>{const row=${targetExpression};if(!row)throw Error('Missing swipe row');const p=row.querySelector('p')||row;p.scrollIntoView({block:'center'});const r=p.getBoundingClientRect();return {x:Math.max(20,Math.min(innerWidth-110,r.x+20)),y:Math.max(60,Math.min(innerHeight-160,r.y+20)),id:row.closest('[data-mid]')?.getAttribute('data-mid'),text:row.innerText.slice(0,200)};})()`);
+    const point=await ui.page.evaluate(`(()=>{const row=${targetExpression};if(!row)throw Error('Missing swipe row');const p=row.querySelector('p')||row.querySelector('.chat-text')||row;p.scrollIntoView({block:'center'});const r=p.getBoundingClientRect();return {x:Math.max(20,Math.min(innerWidth-110,r.x+20)),y:Math.max(60,Math.min(innerHeight-160,r.y+20)),id:row.closest('[data-mid]')?.getAttribute('data-mid'),text:row.innerText.slice(0,200)};})()`);
     if(!point.id)throw Error('Message source ID missing');
     await ui.page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:point.x,y:point.y,id:1}]});
     for(const dx of [2,6,14,30,50,70,82]) {
@@ -90,11 +89,10 @@ try {
   }
   playlist.push(`file '${frames.at(-1).file}'`);
   writeFileSync(join(evidence,`${mode}-frames.ffconcat`),playlist.join('\n')+'\n');
-  const video=execFileSync('ffmpeg',['-hide_banner','-y','-f','concat','-safe','0','-i',join(evidence,`${mode}-frames.ffconcat`),'-fps_mode','vfr','-c:v','libx264','-pix_fmt','yuv420p',join(evidence,`${mode}-native-swipe.mp4`)],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
-  writeFileSync(join(evidence,`${mode}-screencast.json`),JSON.stringify({frames,screencastErrors,qualification:'Actual browser screencast frames and original timestamps; no synthetic animation'},null,2)+'\n');
+  writeFileSync(join(evidence,`${mode}-screencast.json`),JSON.stringify({frames,screencastErrors,qualification:'Actual browser screencast frames and original timestamps; MP4 encoding remains pending on operator host because runner has no ffmpeg; no synthetic animation'},null,2)+'\n');
   writeFileSync(join(evidence, `${mode}-server.log`), readFileSync(ui.info.fixture.logPath));
   if (runtimeErrors.length) throw Error('Application runtime exceptions: ' + JSON.stringify(runtimeErrors).slice(0,1000));
-  console.log(JSON.stringify({ mode, applicationLoaded: true, source: ui.info.expectedHead, buttons: dom.buttons.length, rows: dom.rows.length, inputAssertionsRun: false }));
+  console.log(JSON.stringify({ mode, applicationLoaded: true, source: ui.info.expectedHead, buttons: dom.buttons.length, rows: dom.rows.length, inputAssertionsRun: true, nativeTouchCases: cases.length, videoEncodingPending: true }));
 } catch (error) {
   let dom;
   try { const shot=await ui?.page.screenshot();if(shot)writeFileSync(join(evidence,`${mode}-failure.png`),Buffer.from(shot.data,'base64')); } catch {}
