@@ -1,0 +1,29 @@
+{
+  "at": "2026-11-11T02:41:25.723Z",
+  "source": "b0dfea60673c05f995ae6d2d878959438e1ebad6",
+  "qualification": "Real Chrome and production Settings components with isolated in-memory store and API; not packaged Electron or live server proof.",
+  "result": [
+    {
+      "variant": "before",
+      "searchResult": false
+    },
+    {
+      "variant": "after",
+      "searchResult": true,
+      "switchBefore": "false",
+      "switchAfter": "true",
+      "writes": [
+        {
+          "features": {
+            "showToolCalls": true
+          }
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "before-search.png": "d496156bcbabd924755b8ebcbee9230a06310c5279df5c94f35005c0ae314d6e",
+    "after-search.png": "b2570dd0f578fceb12a419702b5d7e4ec7a13c5de5112d00e22c1041cea90fe5",
+    "after-opened-switch.png": "c4315c645856a7b7b0340db1019d95a6bc2f377153e8aa84e4905d510170f2db"
+  }
+}
